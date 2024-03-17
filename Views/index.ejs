@@ -28,15 +28,15 @@
         <h1 class="text-center text-primary">PRODUCT</h1>
         <form action="/submit" method="post" enctype="multipart/form-data">
           <div class="m-3 row">
-            <label for="productId" class="col-sm-2 col-form-label"
+            <label for="product_id" class="col-sm-2 col-form-label"
               >Product Id</label
             >
             <div class="col-sm-10">
               <input
                 type="text"
                 class="form-control"
-                id="productId"
-                name="productId"
+                id="product_id"
+                name="product_id"
                 required
               />
             </div>
@@ -113,7 +113,7 @@
           <tbody>
             <% for (let i = 0; i < data.length; i++) { %>
             <tr class="text-center">
-              <td><%= data[i].productId %></td>
+              <td><%= data[i].product_id %></td>
               <td><%= data[i].name %></td>
               <td><%= data[i].quanlity %></td>
               <td>
@@ -128,9 +128,9 @@
               <td>
                 <input
                   type="checkbox"
-                  id="<%= data[i].productId %>"
-                  name="check<%= data[i].productId %>"
-                  value="<%= data[i].productId %>"
+                  id="<%= data[i].product_id %>"
+                  name="check<%= data[i].product_id %>"
+                  value="<%= data[i].product_id %>"
                 />
               </td>
             </tr>
@@ -147,7 +147,7 @@
   </body>
 
   <script>
-    function deleteData() {
+    async function deleteData() {
       let checkedList = [];
       document
         .querySelectorAll('input[type="checkbox"]:checked')
@@ -164,7 +164,7 @@
           body: JSON.stringify({ checkedList }),
         });
       };
-      sendRequest();
+      await sendRequest();
       window.location.reload();
     }
 

@@ -1,20 +1,12 @@
 const express = require("express");
 const session = require("express-session");
-const multer = require("multer");
-const data = require("./Data.js");
-
+require("dotenv").config();
 const app = express();
+const { saveProduct } = require("./controllers/uploadProduct.controler");
+const upload = require("./middleware/multerMidleware");
+const {dynamodb} = require("./configs/AWS.config");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
 
-const upload = multer({ storage: storage });
 
 app.use(express.json());
 app.use(express.static("Views"));
@@ -32,43 +24,35 @@ app.use(
 app.set("view engine", "ejs");
 app.set("views", "./Views");
 
-app.get("/", (req, res) => {
-  let message = req.session?.message || "";
-  delete req.session.message;
-  return res.render("index", { data: data, message: message });
-});
+app.get("/", async (req, res) => {
+  try {
+    let message = req.session?.message || "";
+    delete req.session.message;
+    const data = await dynamodb
+      .scan({ TableName: process.env.DynamoDB_TABLE })
+      .promise();
 
-app.post("/submit", upload.single("image"), (req, res) => {
-  const { productId, name, quanlity } = req.body;
-  const image = req.file;
-  console.log(image.path);
-  const check = data.find((item) => item.productId === productId);
-  if (check) {
-    if (check.name === name) {
-      check.quanlity = parseInt(check.quanlity) + parseInt(quanlity);
-    } else {
-      req.session.message = "Product ID already exists";
-    }
-  } else {
-    data.push({
-      productId,
-      name,
-      quanlity,
-      image: image.originalname,
-    });
+    return res.render("index", { data: data.Items, message: message });
+  } catch (err) {
+    console.error(err);
   }
-  console.log(data);
-  return res.redirect("/");
 });
 
-app.post("/delete", upload.fields([]), (req, res) => {
+app.post("/submit", upload.single("image"), saveProduct);
+
+app.post("/delete", upload.fields([]), async (req, res) => {
   const checkList = req.body.checkedList;
   if (checkList) {
-    checkList.forEach((id) => {
-      data.splice(
-        data.findIndex((item) => item.productId === id),
-        1
-      );
+    checkList.forEach(async (id) => {
+      console.log(id);
+      await dynamodb
+        .delete({
+          TableName: process.env.DynamoDB_TABLE,
+          Key: {
+            product_id: Number(id),
+          },
+        })
+        .promise();
     });
   }
   res.redirect("/");
