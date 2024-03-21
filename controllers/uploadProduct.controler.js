@@ -1,7 +1,5 @@
-const {AWS, dynamodb} = require("../configs/AWS.config");
+const { AWS, dynamodb } = require("../configs/AWS.config");
 const s3 = new AWS.S3();
-
-
 
 exports.saveProduct = (req, res) => {
   const { product_id, name, quanlity } = req.body;
@@ -38,4 +36,21 @@ exports.saveProduct = (req, res) => {
       console.error(err);
     }
   });
+};
+exports.deleteProduct = async (req, res) => {
+  const checkList = req.body.checkedList;
+  if (checkList) {
+    checkList.forEach(async (id) => {
+      console.log(id);
+      await dynamodb
+        .delete({
+          TableName: process.env.DynamoDB_TABLE,
+          Key: {
+            product_id: Number(id),
+          },
+        })
+        .promise();
+    });
+  }
+  res.redirect("/");
 };

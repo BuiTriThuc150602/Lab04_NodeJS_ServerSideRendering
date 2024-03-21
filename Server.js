@@ -2,7 +2,7 @@ const express = require("express");
 const session = require("express-session");
 require("dotenv").config();
 const app = express();
-const { saveProduct } = require("./controllers/uploadProduct.controler");
+const { saveProduct, deleteProduct } = require("./controllers/uploadProduct.controler");
 const upload = require("./middleware/multerMidleware");
 const {dynamodb} = require("./configs/AWS.config");
 
@@ -40,23 +40,7 @@ app.get("/", async (req, res) => {
 
 app.post("/submit", upload.single("image"), saveProduct);
 
-app.post("/delete", upload.fields([]), async (req, res) => {
-  const checkList = req.body.checkedList;
-  if (checkList) {
-    checkList.forEach(async (id) => {
-      console.log(id);
-      await dynamodb
-        .delete({
-          TableName: process.env.DynamoDB_TABLE,
-          Key: {
-            product_id: Number(id),
-          },
-        })
-        .promise();
-    });
-  }
-  res.redirect("/");
-});
+app.post("/delete", upload.fields([]), deleteProduct);
 
 app.listen(5000, () => {
   console.log("Server is running on port 5000");
